@@ -1,0 +1,1733 @@
+# lakeshore625.template
+# Template database for for the LakeShore Model 625 Superconducting MPS
+# Pete Owens - 7/9/2011
+#
+# substitutions:
+# device  - device name
+# port    - asyn port
+#
+################################################################################
+# Disable Full Scan to minimise serial traffic
+#
+record(bi, "$(device):MONALL")
+{
+    field(DESC, "Monitor ALL PVs")
+    field(ZNAM, "Enable")
+    field(ONAM, "Disable")
+    field(OSV,  "MAJOR")
+    field(VAL,  "1")
+    field(PINI, "YES")
+}
+################################################################################
+# Disable Control
+#
+record(bi, "$(device):DISABLE")
+{
+    field(DESC, "Disable Control")
+    field(ZNAM, "Enable")
+    field(ONAM, "Disable")
+    field(OSV,  "MAJOR")
+    field(VAL,  "0")
+    field(PINI, "YES")
+}
+################################################################################
+#
+# AMI420 Emulation
+# Use these records to make the controller behave as if it was an AMI420
+#
+################################################################################
+# SETIPRG and SETRMP need to work in combination
+#
+record(ao, "$(device):SETIPRG")
+{
+    field(DESC, "Programmed Current")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(DRVL, "-60.1")
+    field(DRVH, "60.1")
+    field(LOPR, "-60.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):SEQRAMP") 
+}
+record(mbbo, "$(device):SETRMP")
+{
+    field(DESC, "Ramp Control")
+    field(ZRST, "Ramp")
+    field(ONST, "Pause")
+    field(TWST, "Up")
+    field(THST, "Down")
+    field(FRST, "Zero")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):SEQRAMP") 
+}
+record(calc, "$(device):CALRMP") 
+{
+    field(CALC, "A+1")
+    field(INPA, "$(device):SETRMP")
+}
+record(seq, "$(device):SEQRAMP") 
+{
+    field(DESC, "Emulate AMI 420 Ramping")
+    field(SELM, "Specified")
+    field(SELL, "$(device):CALRMP PP")
+# Ramp
+    field(DOL1, "$(device):SETIPRG")
+    field(LNK1, "$(device):PUTIPRG PP")
+# Pause
+    field(DOL2, "0") 
+    field(LNK2, "$(device):STOP PP")
+# Up
+    field(DOL3, "$(device):SETIPRG.DRVH")
+    field(LNK3, "$(device):PUTIPRG PP")
+# Down
+    field(DOL4, "$(device):SETIPRG.DRVL")
+    field(LNK4, "$(device):PUTIPRG PP")
+# Zero
+    field(DOL5, "0")
+    field(LNK5, "$(device):PUTIPRG PP")
+}
+################################################################################
+# SETVLIM - should also synch to SETVPRG
+#
+record(ao, "$(device):SETVLIM")
+{
+    field(DESC, "Voltage Limit")
+    field(EGU,  "V")
+    field(OUT,  "$(device):SETVPRG PP")
+    field(PREC, "4")
+    field(VAL,  "2.0")
+    field(DRVL, "0.1")
+    field(DRVH, "5.0")
+    field(LOPR, "0.0")
+    field(HOPR, "5.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):SETLIM") 
+}
+################################################################################
+#
+# Common Interface Commands
+#
+################################################################################
+# Clear Status System and Errors
+#
+record(seq, "$(device):STA:CLEAR")
+{
+# will need to clear all event records
+#
+    field(DESC, "Clear Satus System")
+    field(SELM, "All")
+    field(DOL1, "0")
+    field(LNK1, "$(device):ERR:CLEAR PP")
+    field(DOL2, "0")
+    field(LNK2, "$(device):STA:CLS PP")
+    field(DOL3, "0")
+    field(LNK3, "$(device):STA:ESR")
+    field(DOL4, "0")
+    field(LNK4, "$(device):STA:OP:EVR")
+    field(SDIS, "$(device):DISABLE")
+}
+################################################################################
+# Clear interface command
+#
+record(bo, "$(device):STA:CLS")
+{
+    field(DESC, "Clear Interface")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto clear $(port)")
+    field(ZNAM, "Clear")
+    field(SDIS, "$(device):DISABLE")
+}
+################################################################################
+# Standard Event Register
+# ESR is cleared on read so we need to keep latched values
+# Write 0 to :ESR to clear rather than :CLS 
+#
+record(mbboDirect, "$(device):STA:SETESE")
+{
+    field(DESC, "Standard Event Enable")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_ese $(port)")
+    field(NOBT, "8")
+    field(SDIS, "$(device):DISABLE")
+}
+record(mbbiDirect, "$(device):STA:ESE")
+{
+    field(DESC, "Standard Event Enable")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_ese $(port)")
+    field(SCAN, "5 second")
+    field(SDIS, "$(device):MONALL")
+}
+record(mbbiDirect, "$(device):STA:ESR")
+{
+    field(DESC, "Standard Event Register")
+    field(NOBT, "8")
+    field(INP,  "$(device):STA:CALESR PP")
+    field(SCAN, "1 second")
+    field(SDIS, "$(device):MONALL")
+}
+record(calc, "$(device):STA:CALESR")
+{
+    field(CALC, "A|B")
+    field(INPA, "$(device):STA:ESR")
+    field(INPB, "$(device):STA:GETESR PP")
+}
+record(mbbiDirect, "$(device):STA:GETESR")
+{
+    field(DESC, "Standard Event Register")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_esr $(port)")
+}
+################################################################################
+# Identification String
+# AMI model number and firmware revision code
+#
+record(stringin, "$(device):ID") 
+{
+    field(DESC, "Identification")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_id $(port)")
+    field(SCAN, "10 second")
+}
+################################################################################
+# Reset the Instrument
+#
+record(bo, "$(device):RESET")
+{
+    field(DESC, "Reset")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto reset $(port)")
+    field(ZNAM, "Reset")
+    field(SDIS, "$(device):DISABLE")
+}
+################################################################################
+# Status Byte Register
+#
+record(bi, "$(device):STA:SUM")
+{
+    field(DESC, "STB Summary bit")
+    field(INP,  "$(device):STA:STB.B6 PP")
+#    field(SCAN, "1 second")
+    field(SCAN, "10 second")
+    field(ZNAM, "OK")
+    field(ONAM, "STB")
+    field(OSV,  "MAJOR")
+}
+record(mbbiDirect, "$(device):STA:STB")
+{
+    field(DESC, "Status Byte")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_stb $(port)")
+}
+record(mbboDirect, "$(device):STA:SETSRE")
+{
+    field(DESC, "Status Byte Enable")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_sre $(port)")
+    field(NOBT, "8")
+    field(SDIS, "$(device):DISABLE")
+}
+record(mbbiDirect, "$(device):STA:SRE")
+{
+    field(DESC, "Status Byte Enable")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_sre $(port)")
+    field(SCAN, "5 second")
+    field(SDIS, "$(device):MONALL")
+}
+################################################################################
+# Trigger Event
+#
+record(bo, "$(device):TRIGGER")
+{
+    field(DESC, "Trigger Event")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto trigger $(port)")
+    field(ZNAM, "Trigger")
+    field(SDIS, "$(device):DISABLE")
+}
+################################################################################
+# Self Test Query
+#
+record(bi, "$(device):TEST")
+{
+    field(DESC, "Self Test")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_test $(port)")
+    field(SCAN, "10 second")
+    field(ZNAM, "OK")
+    field(ONAM, "Error")
+    field(OSV,  "MAJOR")
+}
+################################################################################
+#
+# Instrument Specific Commands
+#
+################################################################################
+# Factory Defaults
+#
+record(bo, "$(device):DEFAULT")
+{
+    field(DESC, "Factory Defaults")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto default $(port)")
+    field(ZNAM, "Default")
+    field(SDIS, "$(device):DISABLE")
+}
+################################################################################
+# Clear Errors
+#
+record(seq, "$(device):ERR:CLEAR")
+{
+    field(DESC, "Clear Errors")
+    field(SELM, "All")
+    field(DOL1, "0")
+    field(LNK1, "$(device):ERR:CLR PP")
+    field(DOL2, "0")
+    field(LNK2, "$(device):ERR:HW:EVR")
+    field(DOL3, "0")
+    field(LNK3, "$(device):ERR:OP:EVR")
+    field(DOL4, "0")
+    field(LNK4, "$(device):ERR:PSH:EVR")
+    field(SDIS, "$(device):DISABLE")
+}
+record(bo, "$(device):ERR:CLR")
+{
+    field(DESC, "Clear Errors")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto clr_err $(port)")
+    field(ZNAM, "Clear")
+    field(SDIS, "$(device):DISABLE")
+}
+################################################################################
+# Error Status Condition
+#
+record(calc, "$(device):ERR:SUM")
+{
+    field(DESC, "Error Summary")
+    field(CALC, "A|B|C|D|E|F")
+    field(INPA, "$(device):ERR:HW:STA PP")
+    field(INPB, "$(device):ERR:OP:STA PP")
+    field(INPC, "$(device):ERR:PSH:STA PP")
+    field(INPD, "$(device):ERR:HW:EVR PP")
+    field(INPE, "$(device):ERR:OP:EVR PP")
+    field(INPF, "$(device):ERR:PSH:EVR PP")
+#    field(SCAN, "1 second")
+    field(SCAN, "10 second")
+    field(LOLO, "-1")
+    field(HIHI, "1")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+}
+record(mbbiDirect, "$(device):ERR:HW:STA")
+{
+    field(DESC, "Hardware Error Status")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_erst($(device)) $(port)")
+#    field(SCAN, "1 second")
+    field(FLNK, "$(device):ERR:OP:STA")
+}
+record(mbbiDirect, "$(device):ERR:OP:STA")
+{
+    field(DESC, "Operational Error Status")
+    field(NOBT, "8")
+    field(FLNK, "$(device):ERR:PSH:STA")
+}
+record(mbbiDirect, "$(device):ERR:PSH:STA")
+{
+    field(DESC, "PSH Error Status")
+    field(NOBT, "8")
+    field(FLNK, "$(device):PSH:OPEN")
+}
+record(bi, "$(device):PSH:OPEN")
+{
+    field(DESC, "PSH Open")
+    field(INP,  "$(device):ERR:PSH:STA.B0")
+    field(ZNAM, "OK")
+    field(ONAM, "Open")
+    field(OSV,  "MAJOR")
+    field(FLNK, "$(device):PSH:SHORT")
+}
+record(bi, "$(device):PSH:SHORT")
+{
+    field(DESC, "PSH Open")
+    field(INP,  "$(device):ERR:PSH:STA.B1")
+    field(ZNAM, "OK")
+    field(ONAM, "Short")
+    field(OSV,  "MAJOR")
+    field(FLNK, "$(device):QD:STA")
+}
+record(bi, "$(device):QD:STA")
+{
+    field(DESC, "Quench Detected")
+    field(INP,  "$(device):ERR:OP:STA.B5")
+    field(ZNAM, "OK")
+    field(ONAM, "Detected")
+    field(OSV,  "MAJOR")
+}
+################################################################################
+# Error Status Enable
+#
+record(calcout, "$(device):ERR:ENA") 
+{
+    field(DESC, "Error Status Enable")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_erste $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):ERR:HW:ENA")
+    field(INPB, "$(device):ERR:OP:ENA")
+    field(INPC, "$(device):ERR:PSH:ENA")
+    field(SDIS, "$(device):DISABLE")
+}
+record(mbboDirect, "$(device):ERR:HW:ENA")
+{
+    field(DESC, "Hardware Error Enable")
+    field(NOBT, "8")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):ERR:ENA") 
+}
+record(mbboDirect, "$(device):ERR:OP:ENA")
+{
+    field(DESC, "Operational Error Enable")
+    field(NOBT, "8")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):ERR:ENA") 
+}
+record(mbboDirect, "$(device):ERR:PSH:ENA")
+{
+    field(DESC, "PSH Error Enable")
+    field(NOBT, "8")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):ERR:ENA") 
+}
+record(mbbiDirect, "$(device):ERR:HW:STE")
+{
+    field(DESC, "Hardware Error Enable")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_erste($(device)) $(port)")
+#    field(SCAN, "5 second")
+    field(SCAN, "10 second")
+    field(FLNK, "$(device):ERR:OP:STE")
+}
+record(mbbiDirect, "$(device):ERR:OP:STE")
+{
+    field(DESC, "Operational Error Enable")
+    field(NOBT, "8")
+    field(FLNK, "$(device):ERR:PSH:STE")
+}
+record(mbbiDirect, "$(device):ERR:PSH:STE")
+{
+    field(DESC, "PSH Error Enable")
+    field(NOBT, "8")
+}
+################################################################################
+# Error Status Event Register
+# ERSTR is cleared on read so we need to keep latched values
+#
+record(mbbiDirect, "$(device):ERR:HW:EVR")
+{
+    field(DESC, "Hardware Error Event")
+    field(NOBT, "8")
+    field(INP,  "$(device):ERR:HW:CAL PP")
+#    field(SCAN, "1 second")
+    field(FLNK, "$(device):ERR:OP:EVR")
+}
+record(mbbiDirect, "$(device):ERR:OP:EVR")
+{
+    field(DESC, "Operational Error Event")
+    field(NOBT, "8")
+    field(INP,  "$(device):ERR:OP:CAL PP")
+    field(FLNK, "$(device):ERR:PSH:EVR")
+}
+record(mbbiDirect, "$(device):ERR:PSH:EVR")
+{
+    field(DESC, "PSH Error Event")
+    field(NOBT, "8")
+    field(INP,  "$(device):ERR:PSH:CAL PP")
+}
+record(calc, "$(device):ERR:HW:CAL")
+{
+    field(CALC, "A|B")
+    field(INPA, "$(device):ERR:HW:EVR")
+    field(INPB, "$(device):ERR:HW:STR PP")
+}
+record(calc, "$(device):ERR:OP:CAL")
+{
+    field(CALC, "A|B")
+    field(INPA, "$(device):ERR:OP:EVR")
+    field(INPB, "$(device):ERR:OP:STR PP")
+}
+record(calc, "$(device):ERR:PSH:CAL")
+{
+    field(CALC, "A|B")
+    field(INPA, "$(device):ERR:PSH:EVR")
+    field(INPB, "$(device):ERR:PSH:STR PP")
+}
+record(mbbiDirect, "$(device):ERR:HW:STR")
+{
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_erstr($(device)) $(port)")
+}
+record(mbbiDirect, "$(device):ERR:OP:STR")
+{
+    field(NOBT, "8")
+}
+record(mbbiDirect, "$(device):ERR:PSH:STR")
+{
+    field(NOBT, "8")
+}
+################################################################################
+# Computed Magnetic Field Parameter
+#
+record(calcout, "$(device):FP:SET") 
+{
+    field(DESC, "Magnetic Field Parameter")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_flds $(port)")
+    field(CALC, "B")
+    field(INPA, "$(device):FP:SETC")
+    field(INPB, "$(device):FP:SETU")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ao, "$(device):FP:SETC")
+{
+    field(DESC, "Field Parameter Constant")
+#    field(EGU,  "T/A")
+    field(PREC, "4")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):FP:SET") 
+}
+record(ai, "$(device):FP:C")
+{
+    field(DESC, "Field Parameter Constant")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_flds($(device)) $(port)")
+    field(SCAN, "10 second")
+#    field(EGU,  "T/A")
+    field(PREC, "4")
+    field(FLNK, "$(device):FP:U") 
+}
+record(bo, "$(device):FP:SETU")
+{
+    field(DESC, "Field Parameter Units")
+    field(ZNAM, "T/A")
+    field(ONAM, "kG/A")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):FP:SET") 
+}
+record(bi, "$(device):FP:U")
+{
+    field(DESC, "Field Parameter Units")
+    field(ZNAM, "T/A")
+    field(ONAM, "kG/A")
+    field(FLNK, "$(device):BU") 
+}
+record(bi, "$(device):BU")
+{
+    field(DESC, "Field Units")
+    field(INP, "$(device):FP:U")
+    field(ZNAM, "T")
+    field(ONAM, "G")
+}
+################################################################################
+# Limit Output Settings
+#
+record(calcout, "$(device):SETLIM") 
+{
+    field(DESC, "Limit Output Settings")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_lim $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):SETILIM")
+    field(INPB, "$(device):SETVLIM")
+    field(INPC, "$(device):SETRLIM")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):ILIM")
+}
+record(ao, "$(device):SETILIM")
+{
+    field(DESC, "Current Limit")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(VAL,  "60.0")
+    field(DRVL, "0.0")
+    field(DRVH, "60.1")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):SETLIM") 
+}
+record(ai, "$(device):ILIM")
+{
+    field(DESC, "Current Limit")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_lim($(device)) $(port)")
+#    field(SCAN, "5 second")
+#    field(SCAN, "10 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(LOLO, "-0.0001")
+    field(HIHI, "60.1001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(FLNK, "$(device):VLIM") 
+}
+##
+## AMI 420 simulation version at top of database
+##
+##record(ao, "$(device):SETVLIM")
+##{
+##    field(DESC, "Voltage Limit")
+##    field(EGU,  "V")
+##    field(PREC, "4")
+##    field(VAL,  "2.0")
+##    field(DRVL, "0.1")
+##    field(DRVH, "5.0")
+##    field(LOPR, "0.0")
+##    field(HOPR, "5.0")
+##    field(SDIS, "$(device):DISABLE")l
+##    field(FLNK, "$(device):SETLIM") 
+##}
+record(ai, "$(device):VLIM")
+{
+    field(DESC, "Voltage Limit")
+    field(EGU,  "V")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "5.0")
+    field(LOLO, "0.0")
+    field(HIHI, "5.0001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(FLNK, "$(device):RLIM") 
+}
+record(ao, "$(device):SETRLIM")
+{
+    field(DESC, "Rate Limit")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(VAL,  "1.0")
+    field(DRVL, "0.0001")
+    field(DRVH, "99.999")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):SETLIM") 
+}
+record(ai, "$(device):RLIM")
+{
+    field(DESC, "Rate Limit")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(LOW,  "0.0")
+    field(HIHI, "100.000")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+##    field(FLNK, "$(device):SEQLIM") 
+}
+##record(seq, "$(device):SEQLIM")
+##{
+##    field(DESC, "Set Warning Limits")
+##    field(SELM, "All")
+##    field(DOL1, "$(device):VLIM")
+##    field(LNK1, "$(device):VMAG.HIGH")
+##    field(DOL2, "$(device):VLIM")
+##    field(LNK2, "$(device):VSUP.HIGH")
+##    field(DOL3, "$(device):VLIM")
+##    field(LNK3, "$(device):VPRG.HIGH")
+##    field(DOL4, "$(device):CALVLOW PP")
+##    field(LNK4, "$(device):VMAG.LOW")
+##
+##    field(DOL5, "$(device):ILIM")
+##    field(LNK5, "$(device):IPRG.HIGH")
+##    field(DOL6, "$(device):ILIM")
+##    field(LNK6, "$(device):ITRG.HIGH")
+##    field(DOL7, "$(device):CALILOW PP")
+##    field(LNK7, "$(device):IPRG.LOW")
+##
+##    field(DOL8, "$(device):RLIM")
+##    field(LNK8, "$(device):IRMP.HIGH")
+##    field(DOL9, "$(device):RLIM")
+##    field(LNK9, "$(device):PM:IRMP.HIGH")
+##}
+##record(calcout, "$(device):CALVLOW")
+##{
+##    field(CALC, "-A")
+##    field(INPA, "$(device):VLIM")
+##    field(OUT,  "$(device):VSUP.LOW")
+##}
+##record(calcout, "$(device):CALILOW")
+##{
+##    field(CALC, "-A")
+##    field(INPA, "$(device):ILIM")
+##    field(OUT, "$(device):ITRG.LOW")
+##}
+################################################################################
+# Keyboard Lock
+#
+record(bo, "$(device):SETLOCK")
+{
+    field(DESC, "Keyboard Lock")
+    field(DTYP, "stream")
+    field(OUT, "@lakeshore625.proto set_lock $(port)")
+    field(ZNAM, "Unlock")
+    field(ONAM, "Lock")
+    field(SDIS, "$(device):DISABLE")
+}
+record(bi, "$(device):LOCK")
+{
+    field(DESC, "Keyboard Lock")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_lock $(port)")
+    field(SCAN, "5 second")
+    field(ZNAM, "Unlock")
+    field(ONAM, "Lock")
+}
+################################################################################
+# IEEE Interface Mode
+#
+record(mbbo, "$(device):SETMODE")
+{
+    field(DESC, "IEEE Interface Mode")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_mode $(port)")
+    field(ZRST, "Local")
+    field(ONST, "Remote")
+    field(TWST, "Remote+Lockout")
+    field(SDIS, "$(device):DISABLE")
+}
+record(mbbi, "$(device):MODE")
+{
+    field(DESC, "IEEE Interface Mode")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_mode $(port)")
+    field(SCAN, "5 second")
+    field(ZRST, "Local")
+    field(ONST, "Remote")
+    field(TWST, "Remote+Lockout")
+}
+################################################################################
+# Operational Status
+# ESR is cleared on read so we need to keep latched values
+#
+record(mbbiDirect, "$(device):STA:OP:STA")
+{
+    field(DESC, "Operational Status")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_opst $(port)")
+    field(SCAN, "1 second")
+    field(SDIS, "$(device):MONALL")
+}
+record(mbboDirect, "$(device):STA:OP:ENA")
+{
+    field(DESC, "Operational Status Enable")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_opste $(port)")
+    field(NOBT, "8")
+    field(SDIS, "$(device):DISABLE")
+}
+record(mbbiDirect, "$(device):STA:OP:STE")
+{
+    field(DESC, "Operational Status Enable")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_opste $(port)")
+    field(SCAN, "5 second")
+    field(SDIS, "$(device):MONALL")
+}
+record(mbbiDirect, "$(device):STA:OP:EVR")
+{
+    field(DESC, "Operational Status Register")
+    field(NOBT, "8")
+    field(INP,  "$(device):STA:OP:CAL PP")
+    field(SCAN, "1 second")
+    field(SDIS, "$(device):MONALL")
+}
+record(calc, "$(device):STA:OP:CAL")
+{
+    field(CALC, "A|B")
+    field(INPA, "$(device):STA:OP:EVR")
+    field(INPB, "$(device):STA:OP:STR PP")
+}
+record(mbbiDirect, "$(device):STA:OP:STR")
+{
+    field(DESC, "Operational Status Register")
+    field(NOBT, "8")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_opstr $(port)")
+}
+################################################################################
+# Persistent Switch Heater
+#
+record(mbbo, "$(device):PSH:CON")
+{
+    field(DESC, "Persistent Switch Heater")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_psh $(port)")
+    field(ZRST, "Off")
+    field(ONST, "On")
+    field(TWST, "Override")
+    field(SDIS, "$(device):DISABLE")
+}
+record(mbbi, "$(device):PSH:STA")
+{
+    field(DESC, "Persistent Switch Heater")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_psh $(port)")
+    field(SCAN, "1 second")
+    field(ZRST, "Off")
+    field(ONST, "On")
+    field(TWST, "Warming")
+    field(TWST, "Cooling")
+    field(SDIS, "$(device):MONALL")
+}
+################################################################################
+# Last Current Setting when PSH was turned off
+#
+record(ai, "$(device):PSH:IS")
+{
+    field(DESC, "Last Current Setting")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_pshis $(port)")
+    field(SCAN, "10 second")
+    field(EGU,  "mA")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(LOLO, "-0.0001")
+#    field(LOW,  "0.0")
+    field(HIGH, "99.9999")
+    field(HIHI, "100.0")
+    field(LLSV, "MAJOR")
+#    field(LSV,  "MINOR")
+    field(HSV,  "MINOR")
+    field(HHSV, "MAJOR")
+    field(SDIS, "$(device):MONALL")
+}
+################################################################################
+# Persistent Switch Heater Parameters
+#
+record(calcout, "$(device):PSH:SET") 
+{
+    field(DESC, "PSH Parameters")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_pshs $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):PSH:SETENA")
+    field(INPB, "$(device):PSH:SETI")
+    field(INPC, "$(device):PSH:SETT")
+    field(FLNK, "$(device):PSH:I")
+    field(SDIS, "$(device):DISABLE")
+}
+record(bo, "$(device):PSH:SETENA")
+{
+    field(DESC, "PSH Enable")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):PSH:SET") 
+}
+record(bi, "$(device):PSH:ENA")
+{
+    field(DESC, "PSH Enabled")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_pshs($(device)) $(port)")
+    field(SCAN, "5 second")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(SDIS, "$(device):MONALL")
+    field(FLNK, "$(device):PSH:I") 
+}
+record(longout, "$(device):PSH:SETI")
+{
+    field(DESC, "PSH Current")
+    field(EGU,  "mA")
+    field(VAL,  "10")
+    field(DRVL, "10")
+    field(DRVH, "125")
+    field(LOPR, "0")
+    field(HOPR, "125")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):PSH:SET") 
+}
+record(longin, "$(device):PSH:I")
+{
+    field(DESC, "PSH Current")
+    field(EGU,  "mA")
+    field(LOPR, "0")
+    field(HOPR, "125")
+    field(LOLO, "9")
+    field(HIHI, "126")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(SDIS, "$(device):MONALL")
+    field(FLNK, "$(device):PSH:T") 
+}
+record(longout, "$(device):PSH:SETT")
+{
+    field(DESC, "PSH Time")
+    field(EGU,  "s")
+    field(DRVL, "5")
+    field(DRVH, "100")
+    field(LOPR, "0")
+    field(HOPR, "100")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):PSH:SET") 
+}
+record(longin, "$(device):PSH:T")
+{
+    field(DESC, "PSH Time")
+    field(EGU,  "s")
+    field(VAL,  "5")
+    field(LOPR, "0")
+    field(HOPR, "100")
+    field(LOLO, "4")
+    field(HIHI, "101")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(SDIS, "$(device):MONALL")
+}
+################################################################################
+# Quench Detection Parameters
+#
+record(calcout, "$(device):QD:SET") 
+{
+    field(DESC, "Quench Parameters")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_qnch $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):QD:SETENA")
+    field(INPB, "$(device):QD:SETRATE")
+    field(SDIS, "$(device):DISABLE")
+}
+record(bo, "$(device):QD:SETENA")
+{
+    field(DESC, "Quench Enable")
+    field(VAL,  "1")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):QD:SET") 
+}
+record(bi, "$(device):QD:ENA")
+{
+    field(DESC, "Quench Enabled")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_qnch($(device)) $(port)")
+    field(SCAN, "5 second")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(FLNK, "$(device):QD:RATE") 
+}
+record(ao, "$(device):QD:SETRATE")
+{
+    field(DESC, "Quench Rate Limit")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(VAL,  "2.0")
+    field(DRVL, "0.0100")
+    field(DRVH, "10.0")
+    field(LOPR, "0.0")
+    field(HOPR, "10.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):QD:SET") 
+}
+record(ai, "$(device):QD:RATE")
+{
+    field(DESC, "Quench Rate Limit")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "10.0")
+    field(LOLO, "0.0099")
+    field(HIHI, "10.001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+}
+################################################################################
+# Ramp Rate
+#
+record(ao, "$(device):SETIRMP")
+{
+    field(DESC, "Ramp Rate")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_rate $(port)")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(VAL,  "0.01")
+    field(DRVL, "0.0001")
+    field(DRVH, "99.999")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ai, "$(device):IRMP")
+{
+    field(DESC, "Ramp Rate")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_rate $(port)")
+    field(SCAN, "5 second")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+#    field(LOLO, "0.0")
+#    field(HIHI, "100.0")
+#    field(LLSV, "MAJOR")
+#    field(HHSV, "MAJOR")
+#    field(HIGH, "100.0")
+#    field(HSV,  "MINOR")
+}
+################################################################################
+# Persistent Mode Ramp Rate Parameters
+#
+record(calcout, "$(device):PM:SET") 
+{
+    field(DESC, "Persistent Mode Parameters")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_ratep $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):PM:SETENA")
+    field(INPB, "$(device):PM:SETIRMP")
+    field(SDIS, "$(device):DISABLE")
+}
+record(bo, "$(device):PM:SETENA")
+{
+    field(DESC, "Persistent Mode Enable")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):PM:SET") 
+}
+record(bi, "$(device):PM:ENA")
+{
+    field(DESC, "Persistent Mode Enabled")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_ratep($(device)) $(port)")
+    field(SCAN, "5 second")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(FLNK, "$(device):PM:IRMP") 
+}
+record(ao, "$(device):PM:SETIRMP")
+{
+    field(DESC, "Persistent Mode Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(VAL,  "0.1")
+    field(DRVL, "0.0001")
+    field(DRVH, "99.999")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):PM:SET") 
+}
+record(ai, "$(device):PM:IRMP")
+{
+    field(DESC, "Persistent Mode Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(LOLO, "0.0")
+    field(HIHI, "100.0")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(HIGH, "100.0")
+    field(HSV,  "MINOR")
+}
+################################################################################
+# Magnet Field
+#
+record(ai, "$(device):BMAG")
+{
+    field(DESC, "Magnet Field")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_field $(port)")
+    field(SCAN, "1 second")
+#    field(EGU,  "T")
+    field(PREC, "4")
+}
+################################################################################
+# Magnet Current
+#
+record(ai, "$(device):IMAGRAW")
+{
+    field(DESC, "Magnet Current")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_iout $(port)")
+    field(SCAN, "1 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(FLNK, "$(device):IMAGBUFF")
+}
+record(compress, "$(device):IMAGBUFF")
+{
+    field(DESC, "Circular Buffer")     
+    field(INP,  "$(device):IMAGRAW MS")
+    field(NSAM, "5")
+    field(ALG,  "Circular Buffer")
+    field(FLNK, "$(device):IMAGMED")
+}
+record(compress, "$(device):IMAGMED")
+{
+    field(DESC, "Magnet Current")
+    field(INP,  "$(device):IMAGBUFF MS")
+    field(N,    "5")
+    field(ALG,  "N to 1 Median")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(FLNK, "$(device):IMAG")
+}
+record(ai, "$(device):IMAG")
+{
+    field(DESC, "Magnet Current")
+    field(INP,  "$(device):IMAGMED")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "-60.0")
+    field(HOPR, "60.0")
+#    field(LOLO, "-60.1001")
+#    field(HIHI, "60.1001")
+#    field(LLSV, "MAJOR")
+#    field(HHSV, "MAJOR")
+#    field(LOW,  "-60.0")
+#    field(HIGH, "60.0")
+#    field(LSV,  "MINOR")
+#    field(HSV,  "MINOR")
+}
+#record(calcout, "$(device):CALHLIM")
+#{
+#    field(DESC, "upper limit")
+#    field(CALC, "((A+C)>(B-D))?(A+C):(B-D)")
+#    field(OUT,  "$(device):IMAG.HIGH")
+#    field(INPA, "$(device):IPRG")
+#    field(INPB, "$(device):IMAG.HIGH")
+#    field(INPC, "1")
+#    field(INPD, "$(device):IRMP")
+#    field(SCAN, "1 second")
+#    field(PHAS, "2")
+#}
+#record(calcout, "$(device):CALLLIM")
+#{
+#    field(DESC, "lower limit")
+#    field(CALC, "((A-C)<(B+D))?(A-C):(B+D)")
+#    field(OUT,  "$(device):IMAG.LOW")
+#    field(INPA, "$(device):IPRG")
+#    field(INPB, "$(device):IMAG.LOW")
+#    field(INPC, "1")
+#    field(INPD, "$(device):IRMP")
+#    field(SCAN, "1 second")
+#    field(PHAS, "2")
+#}
+################################################################################
+# Output Voltage
+#
+record(ai, "$(device):VMAG")
+{
+    field(DESC, "Magnet Voltage")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_vrem $(port)")
+    field(SCAN, "1 second")
+ #   field(EGU,  "V")
+    field(PREC, "4")
+    field(LOPR, "-5.0")
+    field(HOPR, "5.0")
+#    field(LOLO, "-5.0001")
+#    field(HIHI, "5.0001")
+#    field(LLSV, "MAJOR")
+#    field(HHSV, "MAJOR")
+#    field(LOW,  "-5.0")
+#    field(HIGH, "5.0")
+#    field(LSV,  "MINOR")
+#    field(HSV,  "MINOR")
+}
+record(ai, "$(device):VSUPRAW")
+{
+    field(DESC, "Supply Voltage")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_vout $(port)")
+    field(SCAN, "1 second")
+    field(EGU,  "V")
+    field(PREC, "4")
+    field(LOPR, "-5.0")
+    field(HOPR, "5.0")
+    field(FLNK, "$(device):VSUPBUFF")
+}
+record(compress, "$(device):VSUPBUFF")
+{
+    field(DESC, "Circular Buffer")     
+    field(INP,  "$(device):VSUPRAW MS")
+    field(NSAM, "5")
+    field(ALG,  "Circular Buffer")
+    field(FLNK, "$(device):VSUPMED")
+}
+record(compress, "$(device):VSUPMED")
+{
+    field(DESC, "Magnet Current")
+    field(INP,  "$(device):VSUPBUFF MS")
+    field(N,    "5")
+    field(ALG,  "N to 1 Median")
+    field(EGU,  "V")
+    field(PREC, "4")
+    field(FLNK, "$(device):VSUP")
+}
+record(ai, "$(device):VSUP")
+{
+    field(DESC, "Supply Voltage")
+    field(INP,  "$(device):VSUPMED")
+    field(SCAN, "1 second")
+    field(EGU,  "V")
+    field(PREC, "4")
+    field(LOPR, "-5.0")
+    field(HOPR, "5.0")
+}
+################################################################################
+# Ramp Segments
+#
+record(bo, "$(device):RS:SETENA")
+{
+    field(DESC, "Enable Ramp Segments")
+    field(DTYP, "stream")
+    field(OUT, "@lakeshore625.proto set_rseg $(port)")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(SDIS, "$(device):DISABLE")
+}
+record(bi, "$(device):RS:ENA")
+{
+    field(DESC, "Enable Ramp Segments")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_rseg $(port)")
+    field(SCAN, "5 second")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+}
+################################################################################
+# Ramp Segment 1
+#
+record(calcout, "$(device):RS1:SET") 
+{
+    field(DESC, "Ramp Segment 1")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_rsegs(1) $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):RS1:SETI")
+    field(INPB, "$(device):RS1:SETIRMP")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ao, "$(device):RS1:SETI")
+{
+    field(DESC, "RS1 Current")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(DRVL, "0.0")
+    field(DRVH, "60.0")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS1:SET") 
+}
+record(ai, "$(device):RS1:I")
+{
+    field(DESC, "RS1 Current")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_rsegs(1,$(device)) $(port)")
+    field(SCAN, "5 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(LOLO, "-0.0001")
+    field(HIHI, "60.1001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(FLNK, "$(device):RS1:IRMP") 
+}
+record(ao, "$(device):RS1:SETIRMP")
+{
+    field(DESC, "RS1 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(DRVL, "0.0001")
+    field(DRVH, "99.999")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS1:SET") 
+}
+record(ai, "$(device):RS1:IRMP")
+{
+    field(DESC, "RS1 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(LOW,  "0.0")
+    field(HIHI, "100.000")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+}
+################################################################################
+# Ramp Segment 2
+#
+record(calcout, "$(device):RS2:SET") 
+{
+    field(DESC, "Ramp Segment 1")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_rsegs(2) $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):RS2:SETI")
+    field(INPB, "$(device):RS2:SETIRMP")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ao, "$(device):RS2:SETI")
+{
+    field(DESC, "RS2 Current")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(DRVL, "0.0")
+    field(DRVH, "60.0")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS2:SET") 
+}
+record(ai, "$(device):RS2:I")
+{
+    field(DESC, "RS2 Current")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_rsegs(2,$(device)) $(port)")
+    field(SCAN, "5 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(LOLO, "-0.0001")
+    field(HIHI, "60.1001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(FLNK, "$(device):RS2:IRMP") 
+}
+record(ao, "$(device):RS2:SETIRMP")
+{
+    field(DESC, "RS2 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(DRVL, "0.0001")
+    field(DRVH, "99.999")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS2:SET") 
+}
+record(ai, "$(device):RS2:IRMP")
+{
+    field(DESC, "RS2 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(LOW,  "0.0")
+    field(HIHI, "100.000")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+}
+################################################################################
+# Ramp Segment 3
+#
+record(calcout, "$(device):RS3:SET") 
+{
+    field(DESC, "Ramp Segment 1")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_rsegs(3) $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):RS3:SETI")
+    field(INPB, "$(device):RS3:SETIRMP")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ao, "$(device):RS3:SETI")
+{
+    field(DESC, "RS3 Current")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(DRVL, "0.0")
+    field(DRVH, "60.0")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS3:SET") 
+}
+record(ai, "$(device):RS3:I")
+{
+    field(DESC, "RS3 Current")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_rsegs(3,$(device)) $(port)")
+    field(SCAN, "5 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(LOLO, "-0.0001")
+    field(HIHI, "60.1001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(FLNK, "$(device):RS3:IRMP") 
+}
+record(ao, "$(device):RS3:SETIRMP")
+{
+    field(DESC, "RS3 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(DRVL, "0.0001")
+    field(DRVH, "99.999")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS3:SET") 
+}
+record(ai, "$(device):RS3:IRMP")
+{
+    field(DESC, "RS3 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(LOW,  "0.0")
+    field(HIHI, "100.000")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+}
+################################################################################
+# Ramp Segment 4
+#
+record(calcout, "$(device):RS4:SET") 
+{
+    field(DESC, "Ramp Segment 1")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_rsegs(4) $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):RS4:SETI")
+    field(INPB, "$(device):RS4:SETIRMP")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ao, "$(device):RS4:SETI")
+{
+    field(DESC, "RS4 Current")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(DRVL, "0.0")
+    field(SDIS, "$(device):DISABLE")
+
+    field(DRVH, "60.0")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS4:SET") 
+}
+record(ai, "$(device):RS4:I")
+{
+    field(DESC, "RS4 Current")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_rsegs(4,$(device)) $(port)")
+    field(SCAN, "5 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(LOLO, "-0.0001")
+    field(HIHI, "60.1001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(FLNK, "$(device):RS4:IRMP") 
+}
+record(ao, "$(device):RS4:SETIRMP")
+{
+    field(DESC, "RS4 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(DRVL, "0.0001")
+    field(DRVH, "99.999")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS4:SET") 
+}
+record(ai, "$(device):RS4:IRMP")
+{
+    field(DESC, "RS4 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(LOW,  "0.0")
+    field(HIHI, "100.000")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+}
+################################################################################
+# Ramp Segment 5
+#
+record(calcout, "$(device):RS5:SET") 
+{
+    field(DESC, "Ramp Segment 1")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_rsegs(5) $(port)")
+    field(CALC, "A")
+    field(INPA, "$(device):RS5:SETI")
+    field(INPB, "$(device):RS5:SETIRMP")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ao, "$(device):RS5:SETI")
+{
+    field(DESC, "RS5 Current")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(DRVL, "0.0")
+    field(DRVH, "60.0")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS5:SET") 
+}
+record(ai, "$(device):RS5:I")
+{
+    field(DESC, "RS5 Current")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_rsegs(5,$(device)) $(port)")
+    field(SCAN, "5 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "60.0")
+    field(LOLO, "-0.0001")
+    field(HIHI, "60.1001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(FLNK, "$(device):RS5:IRMP") 
+}
+record(ao, "$(device):RS5:SETIRMP")
+{
+    field(DESC, "RS5 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(DRVL, "0.0001")
+    field(DRVH, "99.999")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):RS5:SET") 
+}
+record(ai, "$(device):RS5:IRMP")
+{
+    field(DESC, "RS5 Rate")
+    field(EGU,  "A/s")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "100.0")
+    field(LOW,  "0.0")
+    field(HIHI, "100.000")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+}
+################################################################################
+# Programmed Field
+#
+record(ao, "$(device):SETBPRG")
+{
+    field(DESC, "Programmed Field")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_setf $(port)")
+#    field(EGU,  "T")
+    field(PREC, "4")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ai, "$(device):BPRG")
+{
+    field(DESC, "Programmed Field")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_setf $(port)")
+    field(SCAN, "5 second")
+#    field(EGU,  "T")
+    field(PREC, "4")
+}
+################################################################################
+# Programmed Current
+#
+## RENAMED PUTIPRG for AMI 420 Emulation
+##record(ao, "$(device):SETIPRG")
+record(ao, "$(device):PUTIPRG")
+{
+    field(DESC, "Programmed Current")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_seti $(port)")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(DRVL, "-60.1")
+    field(DRVH, "60.1")
+    field(LOPR, "-60.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):IPRG")
+}
+record(ai, "$(device):IPRG")
+{
+    field(DESC, "Programmed Current")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_seti $(port)")
+#    field(SCAN, "5 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "-60.0")
+    field(HOPR, "60.0")
+#    field(LOLO, "-60.1001")
+#    field(HIHI, "60.1001")
+#    field(LLSV, "MAJOR")
+#    field(HHSV, "MAJOR")
+#    field(LOW,  "-60.0")
+#    field(HIGH, "60.0")
+#    field(LSV,  "MINOR")
+#    field(HSV,  "MINOR")
+}
+################################################################################
+# Output Compliance Voltage
+#
+record(ao, "$(device):SETVPRG")
+{
+    field(DESC, "Output Compliance Voltage")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_setv $(port)")
+    field(EGU,  "V")
+    field(PREC, "4")
+    field(VAL,  "1.0")
+    field(DRVL, "0.1")
+    field(DRVH, "5.0")
+    field(LOPR, "0.0")
+    field(HOPR, "5.0")
+    field(SDIS, "$(device):DISABLE")
+    field(FLNK, "$(device):VPRG")
+}
+record(ai, "$(device):VPRG")
+{
+    field(DESC, "Output Compliance Voltage")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_setv $(port)")
+#    field(SCAN, "5 second")
+    field(EGU,  "V")
+    field(PREC, "4")
+    field(LOPR, "0.0")
+    field(HOPR, "5.0")
+    field(LOLO, "0.0009")
+    field(HIHI, "5.0001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(LOW,  "0.1")
+    field(HIGH, "5.0")
+    field(LSV,  "MINOR")
+    field(HSV,  "MINOR")
+}
+################################################################################
+# Stop Output Current command
+#
+record(bo, "$(device):STOP")
+{
+    field(DESC, "Stop Ramping")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto stop $(port)")
+    field(ZNAM, "Stop")
+    field(SDIS, "$(device):DISABLE")
+}
+################################################################################
+# Trigger Output Current
+#
+record(ao, "$(device):SETITRG")
+{
+    field(DESC, "Trigger Current")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_trig $(port)")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(DRVL, "-60.1")
+    field(DRVH, "60.1")
+    field(LOPR, "-60.0")
+    field(HOPR, "60.0")
+    field(SDIS, "$(device):DISABLE")
+}
+record(ai, "$(device):ITRG")
+{
+    field(DESC, "Trigger Current")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_trig $(port)")
+#    field(SCAN, "5 second")
+    field(SCAN, "10 second")
+    field(EGU,  "A")
+    field(PREC, "4")
+    field(LOPR, "-60.0")
+    field(HOPR, "60.0")
+    field(LOLO, "-60.1001")
+    field(HIHI, "60.1001")
+    field(LLSV, "MAJOR")
+    field(HHSV, "MAJOR")
+    field(LOW,  "-60.0")
+    field(HIGH, "60.0")
+    field(LSV,  "MINOR")
+    field(HSV,  "MINOR")
+}
+################################################################################
+# External Program Mode
+#
+record(mbbo, "$(device):SETXPGM")
+{
+    field(DESC, "External Program Mode")
+    field(DTYP, "stream")
+    field(OUT,  "@lakeshore625.proto set_xpgm $(port)")
+    field(ZRST, "Internal")
+    field(ONST, "External")
+    field(TWST, "Sum")
+    field(SDIS, "$(device):DISABLE")
+}
+record(mbbi, "$(device):XPGM")
+{
+    field(DESC, "External Program Mode")
+    field(DTYP, "stream")
+    field(INP,  "@lakeshore625.proto get_xpgm $(port)")
+    field(SCAN, "5 second")
+    field(ZRST, "Internal")
+    field(ONST, "External")
+    field(TWST, "Sum")
+}
+################################################################################
+#
+# Alarm Summary
+#
+################################################################################
+# ALM - Maximum Alarm Severity
+#
+record(calc, "$(device):ALM")
+{
+    field(DESC, "Max Severity")
+    field(SCAN, "1 second")
+#    field(CALC, "A+B+C+D+E+F")
+    field(CALC, "A+C+D+E")
+    field(INPA, "$(device):STA:SUM MS")
+#    field(INPB, "$(device):QD:STA MS")
+    field(INPC, "$(device):VMAG MS")
+    field(INPD, "$(device):VSUP MS")
+    field(INPE, "$(device):IMAG MS")
+#    field(INPF, "$(device):ERR:SUM MS")
+#    field(INPF, "$(device):PSH:V MS")
+}
+################################################################################

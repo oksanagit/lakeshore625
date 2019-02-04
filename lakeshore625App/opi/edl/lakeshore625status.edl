@@ -1,0 +1,1336 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 70
+y 397
+w 680
+h 510
+font "helvetica-medium-r-16.0"
+ctlFont "helvetica-bold-r-16.0"
+btnFont "helvetica-medium-r-16.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 25
+ctlFgColor2 index 18
+ctlBgColor1 index 3
+ctlBgColor2 index 5
+topShadowColor index 1
+botShadowColor index 11
+title "LakeShore 625 - Status System - $(device)"
+endScreenProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 382
+y 263
+w 155
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 382
+  1 537
+}
+yPoints {
+  0 263
+  1 263
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 638
+y 176
+w 28
+h 109
+lineColor index 14
+fillColor index 3
+numPoints 3
+xPoints {
+  0 638
+  1 666
+  2 666
+}
+yPoints {
+  0 176
+  1 176
+  2 285
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 558
+y 263
+w 79
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 558
+  1 637
+}
+yPoints {
+  0 263
+  1 263
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 484
+y 238
+w 64
+h 47
+lineColor index 14
+fillColor index 3
+numPoints 3
+xPoints {
+  0 548
+  1 484
+  2 484
+}
+yPoints {
+  0 238
+  1 238
+  2 285
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 356
+y 212
+w 252
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 356
+  1 608
+}
+yPoints {
+  0 212
+  1 212
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 512
+y 188
+w 125
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 512
+  1 637
+}
+yPoints {
+  0 188
+  1 188
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 512
+y 138
+w 125
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 512
+  1 637
+}
+yPoints {
+  0 138
+  1 138
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 512
+y 112
+w 126
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 512
+  1 638
+}
+yPoints {
+  0 112
+  1 112
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 512
+y 88
+w 125
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 512
+  1 637
+}
+yPoints {
+  0 88
+  1 88
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 0
+y 0
+w 680
+h 45
+font "helvetica-bold-r-18.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 56
+value {
+  "$(device)"
+  "Status System"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 56
+w 137
+h 15
+font "helvetica-bold-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Standard Event Register"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 620
+y 52
+w 50
+h 22
+controlPv "$(device):STA:SETSRE"
+format "hex"
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 25
+bgColor index 1
+editable
+motifWidget
+limitsFromDb
+nullPv "$(device):STA:SETSRE"
+nullColor index 18
+nullCondition "disabled"
+fastUpdate
+autoSelect
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 310
+y 52
+w 50
+h 22
+controlPv "$(device):STA:SETESE"
+format "hex"
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 25
+bgColor index 1
+editable
+motifWidget
+limitsFromDb
+nullPv "$(device):STA:SETESE"
+nullColor index 18
+nullCondition "disabled"
+fastUpdate
+autoSelect
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Message Button)
+object activeMessageButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 523
+y 311
+w 100
+h 22
+fgColor index 25
+onColor index 4
+offColor index 3
+topShadowColor index 1
+botShadowColor index 11
+controlPv "$(device):STA:CLEAR"
+pressValue "0"
+onLabel "Clear"
+offLabel "Clear Status"
+3d
+font "helvetica-medium-r-14.0"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 80
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Operation Complete"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 130
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Query Error"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 155
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Device Error"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 180
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Execution Error"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 205
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Command Error"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 5
+y 255
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Power On"
+}
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 585
+y 76
+w 25
+h 200
+controlPv "$(device):STA:SRE"
+lineColor index 12
+onColor index 15
+offColor index 19
+lineWidth 2
+endian "little"
+numBits 8
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 535
+y 76
+w 25
+h 200
+controlPv "$(device):STA:STB"
+lineColor index 12
+onColor index 20
+offColor index 24
+lineWidth 2
+endian "little"
+numBits 8
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 365
+y 180
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Message Available"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 365
+y 130
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Hardware Errors"
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 637
+y 88
+w 0
+h 176
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 637
+  1 637
+}
+yPoints {
+  0 88
+  1 264
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 328
+y 175
+w 28
+h 38
+lineColor index 14
+fillColor index 3
+numPoints 3
+xPoints {
+  0 328
+  1 356
+  2 356
+}
+yPoints {
+  0 175
+  1 175
+  2 213
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 175
+y 56
+w 26
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "ESR"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 275
+y 56
+w 25
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "ESE"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 535
+y 56
+w 26
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "STB"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 585
+y 56
+w 26
+h 14
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "SRE"
+}
+autoSize
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 485
+y 285
+w 181
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 485
+  1 666
+}
+yPoints {
+  0 285
+  1 285
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 4
+y 286
+w 170
+h 15
+font "helvetica-bold-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Operation Condition"
+}
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 309
+y 282
+w 50
+h 22
+controlPv "$(device):STA:OP:ENA"
+format "hex"
+font "helvetica-bold-r-14.0"
+fontAlign "center"
+fgColor index 25
+bgColor index 1
+editable
+motifWidget
+limitsFromDb
+nullPv "$(device):STA:OP:ENA"
+nullColor index 18
+nullCondition "disabled"
+fastUpdate
+autoSelect
+useHexPrefix
+newPos
+objType "controls"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 4
+y 310
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Compliance"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 4
+y 335
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Ramp Done"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 4
+y 360
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "PHS Stable"
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 327
+y 262
+w 55
+h 80
+lineColor index 14
+fillColor index 3
+numPoints 3
+xPoints {
+  0 327
+  1 382
+  2 382
+}
+yPoints {
+  0 342
+  1 342
+  2 262
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 164
+y 286
+w 45
+h 15
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "OPST"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 264
+y 286
+w 45
+h 15
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "OPSTE"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 408
+y 56
+w 65
+h 15
+font "helvetica-bold-r-14.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Status Byte"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 214
+y 286
+w 45
+h 15
+font "helvetica-bold-r-12.0"
+fontAlign "center"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "OPSTR"
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 326
+y 318
+w 0
+h 50
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 326
+  1 326
+}
+yPoints {
+  0 318
+  1 368
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 152
+y 367
+w 174
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 152
+  1 326
+}
+yPoints {
+  0 367
+  1 367
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 151
+y 342
+w 176
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 151
+  1 327
+}
+yPoints {
+  0 342
+  1 342
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 151
+y 317
+w 175
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 151
+  1 326
+}
+yPoints {
+  0 317
+  1 317
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 327
+y 88
+w 0
+h 176
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 327
+  1 327
+}
+yPoints {
+  0 88
+  1 264
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 151
+y 263
+w 176
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 151
+  1 327
+}
+yPoints {
+  0 263
+  1 263
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 151
+y 213
+w 176
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 151
+  1 327
+}
+yPoints {
+  0 213
+  1 213
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 152
+y 188
+w 175
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 152
+  1 327
+}
+yPoints {
+  0 188
+  1 188
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 152
+y 163
+w 176
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 152
+  1 328
+}
+yPoints {
+  0 163
+  1 163
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 152
+y 138
+w 175
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 152
+  1 327
+}
+yPoints {
+  0 138
+  1 138
+}
+endObjectProperties
+
+# (Lines)
+object activeLineClass
+beginObjectProperties
+major 4
+minor 0
+release 1
+x 151
+y 88
+w 176
+h 0
+lineColor index 14
+fillColor index 3
+numPoints 2
+xPoints {
+  0 151
+  1 327
+}
+yPoints {
+  0 88
+  1 88
+}
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 174
+y 306
+w 25
+h 200
+controlPv "$(device):STA:OP:STA"
+lineColor index 12
+onColor index 20
+offColor index 24
+lineWidth 2
+endian "little"
+numBits 8
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 224
+y 306
+w 25
+h 200
+controlPv "$(device):STA:OP:EVR"
+lineColor index 12
+onColor index 35
+offColor index 39
+lineWidth 2
+endian "little"
+numBits 8
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 274
+y 306
+w 25
+h 200
+controlPv "$(device):STA:OP:STE"
+lineColor index 12
+onColor index 15
+offColor index 19
+lineWidth 2
+endian "little"
+numBits 8
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 175
+y 76
+w 25
+h 200
+controlPv "$(device):STA:ESR"
+lineColor index 12
+onColor index 20
+offColor index 24
+lineWidth 2
+endian "little"
+numBits 8
+endObjectProperties
+
+# (Byte)
+object ByteClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 275
+y 76
+w 25
+h 200
+controlPv "$(device):STA:ESE"
+lineColor index 12
+onColor index 15
+offColor index 19
+lineWidth 2
+endian "little"
+numBits 8
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 364
+y 105
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Operational Errors"
+}
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 364
+y 80
+w 140
+h 17
+font "helvetica-medium-r-14.0"
+fontAlign "right"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "PSH Errors"
+}
+endObjectProperties
+
+# (Related Display)
+object relatedDisplayClass
+beginObjectProperties
+major 4
+minor 2
+release 0
+x 523
+y 351
+w 100
+h 22
+fgColor index 43
+bgColor index 3
+topShadowColor index 1
+botShadowColor index 11
+font "helvetica-medium-r-14.0"
+buttonLabel "Error Status"
+numPvs 4
+numDsps 1
+displayFileName {
+  0 "lakeshore625error.edl"
+}
+setPosition {
+  0 "button"
+}
+endObjectProperties
+

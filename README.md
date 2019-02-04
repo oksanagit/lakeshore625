@@ -1,0 +1,3 @@
+This IOC is created from .proto and .db files I have recieved from Pierrick M Hanlet, APS along with the set of edm screens.
+Original .proto and .db were created by Pete Owens, and later modified by Pierrick and co. They added delays and removed some records. 
+.opi files have been creatred by edm2opi utility included in CSS studio from SNS. The following have been manualy edited: shrift on all text widgets changed from "1|helverica|18|1|GTK|1|" to "default", action buttons' mode to "workbench tab". The original " stand alone" was causing NSLS2 CSS version to crash. It did not do so in SNS version.  

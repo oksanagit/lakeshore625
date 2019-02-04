@@ -1,0 +1,3 @@
+#!/bin/sh
+export EDMDATAFILES=.:/home/controls/support/lakeshore625/1-2/lakeshore625App/opi/edl
+edm -x -m device=MICE-SS1-MATCH-01 lakeshore625.edl &

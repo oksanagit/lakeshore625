@@ -1,0 +1,84 @@
+# Stream Device Protocol for the LakeShore Model 625 Superconducting MPS
+# Pete Owens 6/9/2011
+
+terminator   = CR LF;
+replytimeout = 5000;
+readtimeout  = 5000;
+
+#
+# Common Interface Commands
+#
+
+clear    { out "*CLS";               wait 50; }
+set_ese  { out "*ESE %d";            wait 50; }
+get_ese  { out "*ESE?";   in "%d";   wait 50; }
+get_esr  { out "*ESR?";   in "%d";   wait 50; }
+get_id   { out "*IDN?";   in "%40c"; wait 50; }
+set_opc  { out "*OPC";               wait 50; }
+get_opc  { out "*OPC?";   in "1";    wait 50; }
+reset    { out "*RST";               wait 50; }
+set_sre  { out "*SRE %d";            wait 50; }
+get_sre  { out "*SRE?";   in "%d";   wait 50; }
+get_stb  { out "*STB?";   in "%d";   wait 50; }
+trigger  { out "*TRG";               wait 50; }
+get_test { out "*TST?";   in "%d";   wait 50; }
+
+#
+# Instrument Specific Commands
+#
+
+default   { out "DFLT 99";                                                                      wait 50; }
+clr_err   { out "ERCL";                                                                         wait 50; }
+get_erst  { out "ERST?";                in "%d,%(\$1:ERR:OP:STA.VAL)d,%(\$1:ERR:PSH:STA.VAL)d"; wait 50; }
+set_erste { out "ERSTE %d,%(B)d,%(C)d";                                                         wait 50; }
+get_erste { out "ERSTE?";               in "%d,%(\$1:ERR:OP:STE.VAL)d,%(\$1:ERR:PSH:STE.VAL)d"; wait 50; }
+get_erstr { out "ERSTR?";               in "%d,%(\$1:ERR:OP:STR.VAL)d,%(\$1:ERR:PSH:STR.VAL)d"; wait 50; }
+
+set_flds  { out "FLDS %d,%(A).4f";                                                   wait 50; }
+get_flds  { out "FLDS?";                in "%(\$1:FP:U.VAL)d,%g";                    wait 50; }
+set_lim   { out "LIMIT %(A).4f,%(B).4f,%(C).4f";                                     wait 50; }
+get_lim   { out "LIMIT?";               in "%g,%(\$1:VLIM.VAL)g,%(\$1:RLIM.VAL)g";   wait 50; }
+set_lock  { out "LOCK %d,123";                                                       wait 50; }
+get_lock  { out "LOCK?";                in "%d,%*d";                                 wait 50; }
+set_mode  { out "MODE %d";                                                           wait 50; }
+get_mode  { out "MODE?";                in "%d";                                     wait 50; } 
+get_opst  { out "OPST?";                in "%d";                                     wait 50; }
+set_opste { out "OPSTE %d";                                                          wait 50; }
+get_opste { out "OPSTE?";               in "%d";                                     wait 50; }
+get_opstr { out "OPSTR?";               in "%d";                                     wait 50; }
+set_psh   { out "PSH %{0|1|99}";                                                     wait 50; }
+get_psh   { out "PSH?";                 in "%d";                                     wait 50; }
+get_pshis { out "PSHIS?";               in "%g";                                     wait 50; }
+set_pshs  { out "PSHS %d,%(B)d,%(C)d";                                               wait 50; }
+get_pshs  { out "PSHS?";                in "%d,%(\$1:PSH:I.VAL)d,%(\$1:PSH:T.VAL)d"; wait 50; }
+set_qnch  { out "QNCH %d,%(B).4f";                                                   wait 50; }
+get_qnch  { out "QNCH?";                in "%d,%(\$1:QD:RATE.VAL)g";                 wait 50; }
+set_rate  { out "RATE %.4f";                                                         wait 50; }
+get_rate  { out "RATE?";                in "%g";                                     wait 50; }
+set_ratep { out "RATEP %d,%(B).4f";                                                  wait 50; }
+get_ratep { out "RATEP?";               in "%d,%(\$1:PM:IRMP.VAL)g";                 wait 50; }
+get_field { out "RDGF?";                in "%g";                                     wait 50; }
+get_iout  { out "RDGI?";                in "%g";                                     wait 50; }
+get_vrem  { out "RDGRV?";               in "%g";                                     wait 50; }
+get_vout  { out "RDGV?";                in "%g";                                     wait 50; }
+set_rseg  { out "RSEG %d";                                                           wait 50; }
+get_rseg  { out "RSEG?";                in "%d";                                     wait 50; }
+#
+# RSEGS command doesn't appear to work
+#
+set_rsegs { out "RSEGS \$1,%.4f,%(B).4f" ;                                           wait 50; }
+get_rsegs { out "RSEGS? \$1";           in "%g,%(\$2:RS\$1:IRMP.VAL)g";              wait 50; }
+#
+set_setf  { out "SETF %.4f";          wait 50; }
+get_setf  { out "SETF?";     in "%g"; wait 50; }
+set_seti  { out "SETI %.4f";          wait 50; }
+get_seti  { out "SETI?";     in "%g"; wait 50; }
+set_setv  { out "SETV %.4f";          wait 50; }
+get_setv  { out "SETV?";     in "%g"; wait 50; } 
+stop      { out "STOP";               wait 50; }
+set_trig  { out "TRIG %.4f";          wait 50; }
+get_trig  { out "TRIG?";     in "%g"; wait 50; }
+set_xpgm  { out "XPGM %d";            wait 50; }
+get_xpgm  { out "XPGM?";     in "%d"; wait 50; }
+
+######################################################################
